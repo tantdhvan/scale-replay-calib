@@ -1,0 +1,14 @@
+build/
+__pycache__/
+*.pyc
+
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+scratch/*
+!scratch/.gitkeep
+
+results/maxcut/*
+!results/maxcut/README.md
