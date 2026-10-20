@@ -327,7 +327,7 @@ void syncStates(std::map<std::pair<int, int>, State> &states,
     eraseBelow(states, lower);
 }
 
-Result runScale(const Graph &graph, const Resources &resources, const std::vector<int> &order,
+Result runOnePass(const Graph &graph, const Resources &resources, const std::vector<int> &order,
                 Real z, Real budget, Real epsilon, Real delta, Real gamma) {
     auto started = Clock::now();
     MaxCutOracle oracle(graph);
@@ -372,7 +372,7 @@ Result runScale(const Graph &graph, const Resources &resources, const std::vecto
             keepBest(best, candidate);
     auto finished = Clock::now();
     Result result;
-    result.algorithm = "SCALE";
+    result.algorithm = "1P-NSMGC";
     result.solution = best;
     result.queries = oracle.queries;
     result.activeStates = states.size();
@@ -382,7 +382,7 @@ Result runScale(const Graph &graph, const Resources &resources, const std::vecto
     return result;
 }
 
-Result runReplay(const Graph &graph, const Resources &resources, const std::vector<int> &order,
+Result runTwoPass(const Graph &graph, const Resources &resources, const std::vector<int> &order,
                  const std::vector<int> &replayOrder, const std::vector<Real> &tangents,
                  Real z, Real budget, Real epsilon, Real delta, Real gamma) {
     auto started = Clock::now();
@@ -449,7 +449,7 @@ Result runReplay(const Graph &graph, const Resources &resources, const std::vect
     }
     auto finished = Clock::now();
     Result result;
-    result.algorithm = "REPLAY";
+    result.algorithm = "2P-NSMGC";
     result.solution = best;
     result.queries = oracle.queries;
     result.activeStates = states.size();
@@ -508,7 +508,7 @@ Candidate runCalibrationPass(const Graph &graph, const Resources &resources, con
     return best;
 }
 
-Result runCalib(const Graph &graph, const Resources &resources, const std::vector<int> &order,
+Result runThreePass(const Graph &graph, const Resources &resources, const std::vector<int> &order,
                 const std::vector<int> &replayOrder, Real z, Real budget,
                 Real epsilon, Real delta) {
     auto started = Clock::now();
@@ -516,7 +516,7 @@ Result runCalib(const Graph &graph, const Resources &resources, const std::vecto
     Candidate gammaCandidate = runCalibrationPass(graph, resources, order, z, budget, calibrationQueries);
     if (!(gammaCandidate.value > 0)) {
         Result result;
-        result.algorithm = "CALIB";
+        result.algorithm = "3P-NSMGC";
         result.solution = Candidate{};
         result.queries = calibrationQueries;
         result.milliseconds = std::chrono::duration<double, std::milli>(Clock::now() - started).count();
@@ -576,7 +576,7 @@ Result runCalib(const Graph &graph, const Resources &resources, const std::vecto
     }
     auto finished = Clock::now();
     Result result;
-    result.algorithm = "CALIB";
+    result.algorithm = "3P-NSMGC";
     result.solution = best;
     result.queries = calibrationQueries + oracle.queries;
     result.activeStates = states.size();
@@ -685,7 +685,7 @@ Config parseArgs(int argc, char **argv) {
                          "[--alpha .05] [--epsilon .053] [--delta .053] [--gamma .053] "
                          "[--configuration theory|practical-sparse] "
                          "[--order file|random|mu_asc|mu_desc] "
-                         "[--order-seed 45] [--mode all|scale|replay|calib|offline]\n"
+                         "[--order-seed 45] [--mode all|1P-NSMGC|2P-NSMGC|3P-NSMGC|offline]\n"
                          "       experiment --smoke\n";
             std::exit(0);
         } else {
@@ -697,6 +697,9 @@ Config parseArgs(int argc, char **argv) {
     if (!(config.epsilon > 0 && config.epsilon < 1.0 / 6.0)) throw std::runtime_error("epsilon must be in (0,1/6)");
     if (!(config.delta > 0)) throw std::runtime_error("delta must be positive");
     if (!(config.gamma > 0 && config.gamma < 1)) throw std::runtime_error("gamma must lie in (0,1)");
+    const std::vector<std::string> allowedModes = {"all", "1P-NSMGC", "2P-NSMGC", "3P-NSMGC", "offline"};
+    if (std::find(allowedModes.begin(), allowedModes.end(), config.mode) == allowedModes.end())
+        throw std::runtime_error("--mode must be all, 1P-NSMGC, 2P-NSMGC, 3P-NSMGC, or offline");
     return config;
 }
 
@@ -726,9 +729,9 @@ int smoke() {
     config.order = "file";
     config.orderSeed = 0;
     printHeader();
-    printResult(runScale(graph, resources, order, z, budget, config.epsilon, config.delta, config.gamma), config, graph, z, grid.size());
-    printResult(runReplay(graph, resources, order, order, grid, z, budget, config.epsilon, config.delta, config.gamma), config, graph, z, grid.size());
-    printResult(runCalib(graph, resources, order, order, z, budget, config.epsilon, config.delta), config, graph, z, grid.size());
+    printResult(runOnePass(graph, resources, order, z, budget, config.epsilon, config.delta, config.gamma), config, graph, z, grid.size());
+    printResult(runTwoPass(graph, resources, order, order, grid, z, budget, config.epsilon, config.delta, config.gamma), config, graph, z, grid.size());
+    printResult(runThreePass(graph, resources, order, order, z, budget, config.epsilon, config.delta), config, graph, z, grid.size());
     printResult(runOfflineGreedy(graph, resources, order, z, budget), config, graph, z, grid.size());
     return 0;
 }
@@ -743,12 +746,12 @@ int main(int argc, char **argv) {
         Real z = normalQuantile(config.alpha);
         std::vector<Real> grid = tangentGrid(config.epsilon);
         printHeader();
-        if (config.mode == "all" || config.mode == "scale")
-            printResult(runScale(graph, resources, order, z, config.budget, config.epsilon, config.delta, config.gamma), config, graph, z, grid.size());
-        if (config.mode == "all" || config.mode == "replay")
-            printResult(runReplay(graph, resources, order, order, grid, z, config.budget, config.epsilon, config.delta, config.gamma), config, graph, z, grid.size());
-        if (config.mode == "all" || config.mode == "calib")
-            printResult(runCalib(graph, resources, order, order, z, config.budget, config.epsilon, config.delta), config, graph, z, grid.size());
+        if (config.mode == "all" || config.mode == "1P-NSMGC")
+            printResult(runOnePass(graph, resources, order, z, config.budget, config.epsilon, config.delta, config.gamma), config, graph, z, grid.size());
+        if (config.mode == "all" || config.mode == "2P-NSMGC")
+            printResult(runTwoPass(graph, resources, order, order, grid, z, config.budget, config.epsilon, config.delta, config.gamma), config, graph, z, grid.size());
+        if (config.mode == "all" || config.mode == "3P-NSMGC")
+            printResult(runThreePass(graph, resources, order, order, z, config.budget, config.epsilon, config.delta), config, graph, z, grid.size());
         if (config.mode == "all" || config.mode == "offline")
             printResult(runOfflineGreedy(graph, resources, order, z, config.budget), config, graph, z, grid.size());
     } catch (const std::exception &error) {

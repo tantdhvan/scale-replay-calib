@@ -5,11 +5,11 @@ This repository contains the independent experiment package for the paper
 Constraint." It has no imports, binaries, paths, or runtime dependency on any
 other draft repository.
 
-The package evaluates three deterministic streaming algorithms - SCALE (one
-pass), REPLAY (two passes), and CALIB (three passes) - against `Offline-Greedy`,
-an offline reference heuristic. The application is unit-weight Max-Cut on an
-undirected graph. Vertices arrive in a stream; the exact value oracle uses the
-static graph to evaluate the cut function
+The package evaluates the deterministic streaming algorithms 1P-NSMGC (one
+pass), 2P-NSMGC (two passes), and 3P-NSMGC (three passes) against
+`Offline-Greedy`, an offline reference heuristic. The application is unit-
+weight Max-Cut on an undirected graph. Vertices arrive in a stream; the exact
+value oracle uses the static graph to evaluate the cut function
 
 ```text
 f(S) = number of edges with exactly one endpoint in S.
@@ -116,6 +116,11 @@ python src/run_maxcut.py `
 `Offline-Greedy` is deterministic for a fixed graph, resource instance, and
 budget, the runner executes it once per budget while running the three
 streaming methods over all ten stream orders.
+
+To run selected methods, pass their manuscript names to `--modes`, for example
+`--modes 1P-NSMGC,3P-NSMGC,offline`.
+The summary and plotting scripts also accept earlier log labels and emit the
+current manuscript names in their outputs.
 
 Create raw and summary tables:
 

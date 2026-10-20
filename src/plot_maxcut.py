@@ -24,16 +24,20 @@ RHO_VALUES = (0.01, 0.02, 0.03, 0.04, 0.05)
 ORDER_SEEDS = tuple(range(45, 55))
 ALGORITHMS = (
     ("Offline-Greedy", "Offline-Greedy", "#1f77b4", "o"),
-    ("SCALE", "SCALE", "#d62728", "D"),
-    ("REPLAY", "REPLAY", "#2ca02c", "s"),
-    ("CALIB", "CALIB", "#9467bd", "^"),
+    ("1P-NSMGC", "1P-NSMGC", "#d62728", "D"),
+    ("2P-NSMGC", "2P-NSMGC", "#2ca02c", "s"),
+    ("3P-NSMGC", "3P-NSMGC", "#9467bd", "^"),
 )
 ALGORITHM_ALIASES = {
     "Offline-Greedy": "Offline-Greedy",
     "Offline-Greedy-CC": "Offline-Greedy",
-    "SCALE": "SCALE",
-    "REPLAY": "REPLAY",
-    "CALIB": "CALIB",
+    "1P-NSMGC": "1P-NSMGC",
+    "2P-NSMGC": "2P-NSMGC",
+    "3P-NSMGC": "3P-NSMGC",
+    # Accept historical logs while displaying the manuscript names.
+    "SCALE": "1P-NSMGC",
+    "REPLAY": "2P-NSMGC",
+    "CALIB": "3P-NSMGC",
 }
 METRICS = (
     ("objective", "objective", r"Max-Cut value $f(S)$", False),

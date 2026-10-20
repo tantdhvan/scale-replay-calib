@@ -32,9 +32,13 @@ FIELDS = [
     "retained_candidate_slots",
 ]
 ALGORITHM_ALIASES = {
-    "SCALE": "SCALE",
-    "REPLAY": "REPLAY",
-    "CALIB": "CALIB",
+    "1P-NSMGC": "1P-NSMGC",
+    "2P-NSMGC": "2P-NSMGC",
+    "3P-NSMGC": "3P-NSMGC",
+    # Accept logs from earlier experiment runs and emit the current names.
+    "SCALE": "1P-NSMGC",
+    "REPLAY": "2P-NSMGC",
+    "CALIB": "3P-NSMGC",
     "Offline-Greedy": "Offline-Greedy",
     "Offline-Greedy-CC": "Offline-Greedy",
 }

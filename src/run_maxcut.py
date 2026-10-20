@@ -201,7 +201,7 @@ def run() -> int:
     parser.add_argument(
         "--modes",
         default=None,
-        help="comma-separated modes: scale,replay,calib,offline; defaults to all or isolated all",
+        help="comma-separated modes: 1P-NSMGC,2P-NSMGC,3P-NSMGC,offline; defaults to all or isolated all",
     )
     parser.add_argument(
         "--append",
@@ -237,13 +237,13 @@ def run() -> int:
     if args.workers < 1:
         raise SystemExit("workers must be positive")
 
-    allowed_modes = {"scale", "replay", "calib", "offline", "all"}
+    allowed_modes = {"1P-NSMGC", "2P-NSMGC", "3P-NSMGC", "offline", "all"}
     if args.modes is None:
-        modes = ("scale", "replay", "calib", "offline") if args.separate_algorithms else ("all",)
+        modes = ("1P-NSMGC", "2P-NSMGC", "3P-NSMGC", "offline") if args.separate_algorithms else ("all",)
     else:
         modes = tuple(item.strip() for item in args.modes.split(",") if item.strip())
         if not modes or any(item not in allowed_modes for item in modes):
-            raise SystemExit("--modes must contain only scale,replay,calib,offline, or all")
+            raise SystemExit("--modes must contain only 1P-NSMGC,2P-NSMGC,3P-NSMGC,offline, or all")
         if "all" in modes and len(modes) != 1:
             raise SystemExit("--modes=all cannot be combined with other modes")
 
